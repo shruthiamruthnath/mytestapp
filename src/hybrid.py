@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from search import Product, SemanticProductSearch
+try:  # package import (pytest / python -m)
+    from .search import Product, SemanticProductSearch
+except ImportError:  # direct script-style import
+    from search import Product, SemanticProductSearch
 
 
 @dataclass
