@@ -2,7 +2,7 @@
 
 A product-management case study and working AI search MVP that explores how an e-commerce marketplace can improve product discovery for conversational, synonym-heavy and attribute-rich queries.
 
-The current prototype combines **natural-language query understanding + BM25 + SentenceTransformers + FAISS + Reciprocal Rank Fusion + structured commerce filters**, with optional **cross-encoder reranking**, offline evaluation, a Streamlit demo and PR CI.
+The current prototype combines **BM25 + SentenceTransformers + FAISS + Reciprocal Rank Fusion**, with optional **cross-encoder reranking**, structured commerce filters, offline evaluation, a Streamlit demo and PR CI.
 
 > Independent portfolio project. Public examples from Amazon, Target and Walmart are used as industry reference points; no proprietary architecture is claimed or reproduced.
 
@@ -10,39 +10,28 @@ The current prototype combines **natural-language query understanding + BM25 + S
 
 **How might an e-commerce platform help shoppers find the right products when the words they use do not exactly match the product catalog?**
 
-Example Phase 2 query:
+Example:
+- Shopper intent: `comfortable shoes for walking all day`
+- Catalog language: `cushioned walking sneaker`, `memory foam`, `supportive trainer`
 
-`waterproof women's hiking shoes under $100 rated 4.5 stars in stock`
-
-The query-understanding layer separates semantic intent from structured constraints:
-
-- semantic intent: `waterproof women's hiking shoes`
-- gender: `women`
-- category: `Shoes`
-- max price: `$100`
-- minimum rating: `4.5`
-- availability: `in stock`
+A keyword-only system may miss useful matches. A semantic-only system can overgeneralize. The product hypothesis is that **hybrid retrieval** provides a better balance.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    C[Product catalog] --> T[Searchable product text + commerce metadata]
-    Q[Shopper query] --> U[Query understanding]
-    U --> SQ[Semantic query]
-    U --> CF[Structured constraints]
+    C[Product catalog] --> T[Searchable product text]
     T --> B[BM25 index]
     T --> E[SentenceTransformer embeddings]
     E --> F[FAISS index]
-    SQ --> B
-    SQ --> QE[Query embedding]
+    Q[Shopper query] --> B
+    Q --> QE[Query embedding]
     QE --> F
     B --> BR[Lexical ranking]
     F --> SR[Semantic ranking]
     BR --> RRF[Reciprocal Rank Fusion]
     SR --> RRF
-    RRF --> FL[Commerce filters]
-    CF --> FL
+    RRF --> FL[Structured filters]
     FL --> RR[Optional cross-encoder reranker]
     RR --> K[Top-K products]
 ```
@@ -69,7 +58,6 @@ The case study follows the supplied Analytical Thinking template:
 
 **North Star:** Weekly Successful Search Sessions  
 **Primary offline metric:** NDCG@10  
-**Supporting metrics:** Recall@10, MRR, average/p95 latency  
 **Guardrails:** exact-match regression, p95 latency, reformulation, poor-result rate, returns/cancellations and exposure concentration.
 
 ## Public industry reference points
@@ -84,30 +72,26 @@ See [`docs/competitive-analysis.md`](docs/competitive-analysis.md).
 
 ```text
 .
-├── .github/workflows/ci.yml       # tests + measured Phase 2 benchmark
-├── app.py                         # Streamlit query-understanding/search demo
+├── .github/workflows/ci.yml      # PR unit-test CI
+├── app.py                        # Streamlit demo
 ├── data/
-│   ├── sample_products.csv        # synthetic commerce catalog with metadata
-│   ├── qrels.csv                  # Phase 1 relevance judgments
-│   └── phase2_qrels.csv           # constraint-rich Phase 2 judgments
+│   ├── sample_products.csv       # synthetic demo catalog
+│   └── qrels.csv                 # relevance judgments
 ├── docs/
 │   ├── case-study.md
 │   ├── competitive-analysis.md
 │   └── white-paper.md
 ├── src/
-│   ├── __init__.py
-│   ├── search.py                  # SentenceTransformer + FAISS
-│   ├── bm25.py                    # BM25 lexical retrieval
-│   ├── hybrid.py                  # original TF-IDF + FAISS baseline
-│   ├── query_parser.py            # natural-language constraint extraction
-│   ├── pipeline.py                # query understanding + hybrid + filters
-│   ├── filters.py                 # price/brand/gender/rating/stock filters
-│   ├── rerank.py                  # optional cross-encoder reranker
-│   ├── evaluate.py                # Phase 1 evaluation
-│   └── phase2_benchmark.py        # four-system Phase 2 experiment
+│   ├── __init__.py               # Python package marker for CI/imports
+│   ├── search.py                 # SentenceTransformer + FAISS
+│   ├── bm25.py                   # BM25 lexical retrieval
+│   ├── hybrid.py                 # original TF-IDF + FAISS RRF baseline
+│   ├── pipeline.py               # BM25 + FAISS + filters + reranking
+│   ├── filters.py                # structured commerce filtering
+│   ├── rerank.py                 # optional cross-encoder reranker
+│   └── evaluate.py               # NDCG@10 / Recall@10 comparison
 ├── tests/
-│   ├── test_metrics.py
-│   └── test_query_parser.py
+│   └── test_metrics.py
 └── requirements.txt
 ```
 
@@ -117,38 +101,40 @@ See [`docs/competitive-analysis.md`](docs/competitive-analysis.md).
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python src/evaluate.py
 PYTHONPATH=. python -m pytest -q
-python -m src.phase2_benchmark
 streamlit run app.py
 ```
 
-The first embedding/reranker run downloads its models and caches them locally.
+The first embedding/reranker run downloads its model and caches it locally.
 
-## Phase 2 experiment
+## Offline experiment
 
 | System | Role | Hypothesis |
 |---|---|---|
-| BM25 | Control | Strong literal/catalog matching |
-| FAISS semantic | Treatment A | Better intent and synonym recall |
-| BM25 + FAISS + filters | Treatment B | Better relevance for constraint-rich commerce queries |
-| Hybrid + filters + reranker | Treatment C | Better top-rank precision at additional latency/cost |
+| TF-IDF | Baseline A | Simple exact-token relevance |
+| BM25 | Baseline B | Stronger lexical ranking for catalog text |
+| FAISS semantic | Treatment A | Better intent/synonym recall |
+| TF-IDF + FAISS RRF | Treatment B | Early hybrid baseline |
+| BM25 + FAISS RRF | Treatment C | Better lexical + semantic balance |
+| BM25 + FAISS + reranker | Future online candidate | Higher top-rank precision at added latency/cost |
 
-The Phase 2 benchmark reports **NDCG@10, Recall@10, MRR and average query latency**, both overall and by query slice. CI uploads the raw benchmark output as an artifact.
-
-**No improvement percentage is claimed until the experiment has actually run.** Any X% shown in the final case study will be computed from these measured results.
+Evaluation slices include conversational, semantic/synonym, attribute-heavy and exact queries. The labeled dataset is intentionally small and synthetic; retailer-reported improvements are **not** presented as results of this prototype.
 
 ## MVP → production roadmap
 
-1. Replace/augment the synthetic catalog with a larger public commerce dataset.
-2. Expand human relevance judgments and difficult query slices.
-3. Benchmark relevance and p50/p95 serving latency on larger candidate sets.
-4. Add stronger taxonomy/synonym handling and learned query-intent classification.
-5. Tune query routing so exact SKU/model searches preserve lexical dominance.
-6. Introduce interaction labels with position-bias controls.
-7. Validate relevance improvements through an online A/B test before claiming conversion impact.
+1. Replace the synthetic catalog with a larger public commerce dataset.
+2. Expand human relevance judgments and query slices.
+3. Benchmark BM25 vs FAISS vs hybrid by NDCG, Recall, MRR and p95 latency.
+4. Add price, brand, category and availability metadata to the catalog.
+5. Enable the cross-encoder only on top-N candidates and measure latency/relevance tradeoffs.
+6. Add click/add-to-cart simulation or real interaction logging for online-style metrics.
+7. Run A/B testing in a controlled environment before tying relevance gains to conversion.
 
 ## Documents
 
 - [Full PM case study](docs/case-study.md)
 - [Competitive analysis](docs/competitive-analysis.md)
 - [White paper](docs/white-paper.md)
+
+<!-- CI recovery sync -->
