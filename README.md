@@ -137,4 +137,4 @@ Evaluation slices include conversational, semantic/synonym, attribute-heavy and 
 - [Competitive analysis](docs/competitive-analysis.md)
 - [White paper](docs/white-paper.md)
 
-<!-- CI recovery sync -->
+<!-- CI recovery sync: fresh trigger after cancellation -->
