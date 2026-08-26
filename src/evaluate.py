@@ -6,8 +6,12 @@ import math
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from hybrid import HybridProductSearch, LexicalProductSearch
-from search import Product, SemanticProductSearch
+try:  # package import (pytest / python -m)
+    from .hybrid import HybridProductSearch, LexicalProductSearch
+    from .search import Product, SemanticProductSearch
+except ImportError:  # direct script execution
+    from hybrid import HybridProductSearch, LexicalProductSearch
+    from search import Product, SemanticProductSearch
 
 ROOT = Path(__file__).resolve().parents[1]
 
