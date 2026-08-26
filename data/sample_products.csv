@@ -1,17 +1,25 @@
-id,title,category,description,attributes
-P001,Cushioned Walking Sneaker,Shoes,Supportive lightweight shoe designed for long walks,memory foam breathable flexible
-P002,Waterproof Trail Running Shoe,Shoes,Rugged running shoe with grip for wet trails,waterproof trail grip durable
-P003,Leather Office Loafer,Shoes,Formal slip-on shoe for business and office wear,leather formal slip-on
-P004,Stability Running Trainer,Shoes,Supportive trainer for road running and daily mileage,arch support cushioned stability
-P005,Packable Rain Jacket,Apparel,Lightweight waterproof shell for travel and rainy days,waterproof packable hooded
-P006,Insulated Toddler Winter Coat,Apparel,Warm winter jacket for toddlers in cold weather,insulated toddler hooded winter
-P007,Ergonomic Mesh Office Chair,Furniture,Adjustable desk chair for long working sessions,lumbar support breathable adjustable
-P008,Memory Foam Seat Cushion,Furniture,Portable cushion that adds pressure relief to office chairs,memory foam ergonomic pressure relief
-P009,Stainless Steel Water Bottle,Home,Reusable insulated bottle for everyday hydration,stainless insulated BPA-free
-P010,Kids Leakproof Water Bottle,Home,Small durable bottle for school bags and kids,leakproof kids straw lightweight
-P011,Noise Cancelling Wireless Headphones,Electronics,Over-ear Bluetooth headphones for commuting and focus,wireless ANC over-ear bluetooth
-P012,Sweat Resistant Sport Earbuds,Electronics,Wireless earbuds designed for workouts and running,sweat resistant sport bluetooth secure fit
-P013,USB-C Laptop Charger,Electronics,Compact fast charger for compatible laptops and tablets,USB-C PD 65W travel
-P014,Portable Power Bank,Electronics,Compact battery pack for phones and travel,fast charge USB-C 10000mAh
-P015,Compact Travel Backpack,Bags,Carry-on friendly backpack with laptop sleeve,travel lightweight laptop sleeve carry-on
-P016,Water Resistant Work Backpack,Bags,Professional backpack with protected laptop compartment,water resistant office laptop organized
+id,title,category,description,attributes,brand,price,rating,in_stock,gender
+P001,Cushioned Walking Sneaker,Shoes,Supportive lightweight shoe designed for long walks,memory foam breathable flexible,StrideCo,79,4.6,true,women
+P002,Waterproof Trail Running Shoe,Shoes,Rugged running shoe with grip for wet trails,waterproof trail grip durable,PeakRun,99,4.5,true,women
+P003,Leather Office Loafer,Shoes,Formal slip-on shoe for business and office wear,leather formal slip-on,UrbanStep,120,4.4,true,men
+P004,Stability Running Trainer,Shoes,Supportive trainer for road running and daily mileage,arch support cushioned stability,StrideCo,89,4.7,true,unisex
+P005,Packable Rain Jacket,Apparel,Lightweight waterproof shell for travel and rainy days,waterproof packable hooded,NorthPeak,68,4.5,true,women
+P006,Insulated Toddler Winter Coat,Apparel,Warm winter jacket for toddlers in cold weather,insulated toddler hooded winter,LittleTrail,55,4.8,true,kids
+P007,Ergonomic Mesh Office Chair,Furniture,Adjustable desk chair for long working sessions,lumbar support breathable adjustable,WorkWell,249,4.6,true,unisex
+P008,Memory Foam Seat Cushion,Furniture,Portable cushion that adds pressure relief to office chairs,memory foam ergonomic pressure relief,WorkWell,39,4.4,true,unisex
+P009,Stainless Steel Water Bottle,Home,Reusable insulated bottle for everyday hydration,stainless insulated BPA-free,HydraHome,28,4.7,true,unisex
+P010,Kids Leakproof Water Bottle,Home,Small durable bottle for school bags and kids,leakproof kids straw lightweight,HydraHome,18,4.8,true,kids
+P011,Noise Cancelling Wireless Headphones,Electronics,Over-ear Bluetooth headphones for commuting and focus,wireless ANC over-ear bluetooth,SoundArc,129,4.6,true,unisex
+P012,Sweat Resistant Sport Earbuds,Electronics,Wireless earbuds designed for workouts and running,sweat resistant sport bluetooth secure fit,SoundArc,59,4.4,true,unisex
+P013,USB-C Laptop Charger,Electronics,Compact fast charger for compatible laptops and tablets,USB-C PD 65W travel,VoltEdge,45,4.7,true,unisex
+P014,Portable Power Bank,Electronics,Compact battery pack for phones and travel,fast charge USB-C 10000mAh,VoltEdge,35,4.5,true,unisex
+P015,Compact Travel Backpack,Bags,Carry-on friendly backpack with laptop sleeve,travel lightweight laptop sleeve carry-on,NomadPack,72,4.6,true,unisex
+P016,Water Resistant Work Backpack,Bags,Professional backpack with protected laptop compartment,water resistant office laptop organized,MetroCarry,95,4.7,true,unisex
+P017,Women's Waterproof Hiking Boot,Shoes,Mid-height hiking boot for wet trails and weekend hikes,waterproof ankle support lug sole,PeakRun,92,4.8,true,women
+P018,Women's Premium Hiking Boot,Shoes,Leather hiking boot with waterproof membrane and rugged support,waterproof leather hiking traction,NorthPeak,145,4.9,true,women
+P019,Men's Trail Hiking Shoe,Shoes,Low-profile trail shoe for hiking and outdoor walking,trail grip breathable hiking,PeakRun,84,4.5,true,men
+P020,Budget Walking Shoe,Shoes,Affordable everyday walking shoe with basic cushioning,walking cushioned lightweight,EveryStep,49,4.1,true,women
+P021,Women's Waterproof Trail Shoe,Shoes,Light hiking and trail shoe with waterproof upper,waterproof trail lightweight grip,StrideCo,76,4.6,false,women
+P022,4.8-Star Compact Travel Charger,Electronics,Small USB-C fast charger for travel phones and tablets,USB-C 45W compact travel,VoltEdge,32,4.8,true,unisex
+P023,Women's Packable Waterproof Shell,Apparel,Compact rain shell for hiking travel and commuting,waterproof breathable packable hiking,NorthPeak,82,4.7,true,women
+P024,Highly Rated Carry-On Laptop Backpack,Bags,Carry-on backpack for flights with padded laptop storage,carry-on laptop organized water resistant,NomadPack,88,4.8,true,unisex
