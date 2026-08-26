@@ -1,211 +1,278 @@
 # White Paper: Hybrid Semantic Search for E-commerce Product Discovery
 
 ## Executive Summary
-E-commerce search is a matching problem under business constraints. Shoppers often describe needs in language that does not exactly match catalog text, while marketplaces must still preserve precision for brands, model numbers, categories, price/availability filters and exact identifiers. This white paper proposes a hybrid search architecture that combines lexical retrieval with dense semantic retrieval and rank fusion.
+E-commerce search is a matching problem under business constraints. Shoppers often describe needs in language that does not exactly match catalog text, while marketplaces must still preserve precision for brands, model numbers, categories, price/availability filters and exact identifiers.
 
-The portfolio MVP uses a SentenceTransformer to encode products and queries, FAISS for dense nearest-neighbor retrieval, TF-IDF as the lexical baseline, and Reciprocal Rank Fusion (RRF) to combine both rankings. The product hypothesis is that hybrid retrieval will improve relevance for conversational, synonym-heavy and attribute-rich queries without materially degrading exact-match precision or search latency.
+This white paper proposes a multi-stage retrieval architecture that combines **BM25 lexical retrieval**, **dense semantic retrieval with SentenceTransformers + FAISS**, **Reciprocal Rank Fusion (RRF)**, structured commerce filtering and an optional cross-encoder reranker.
+
+The product hypothesis is that hybrid retrieval will improve relevance for conversational, synonym-heavy and attribute-rich queries without materially degrading exact-match precision, trust or latency.
 
 ## 1. Problem Statement
-Traditional keyword search performs well when shopper vocabulary overlaps catalog vocabulary. It can fail when intent is expressed through synonyms ("small child" vs. "toddler"), inferred use cases ("walking all day" vs. "cushioned walking sneaker"), morphological variation, misspellings or longer natural-language prompts.
+Traditional keyword search works well when shopper vocabulary overlaps catalog vocabulary. It can fail when intent is expressed through synonyms ("small child" vs. "toddler"), inferred use cases ("walking all day" vs. "cushioned walking sneaker"), morphological variation, spelling differences or longer natural-language prompts.
 
-The problem is not simply to maximize semantic similarity. An e-commerce system must retrieve relevant products quickly, respect structured constraints, adapt to catalog changes, avoid plausible-but-wrong results and connect relevance improvements to shopper outcomes.
+Semantic search improves recall but creates a new failure mode: results can be conceptually related yet commercially wrong. Therefore the goal is not maximum vector similarity. The goal is to retrieve **relevant, purchasable, trustworthy products quickly**.
 
 ## 2. Product Mission
 **Help every shopper translate intent into a relevant, trustworthy set of purchasable products with minimal effort.**
 
-This mission anchors the core tradeoff: broader semantic recall is valuable only if result precision, trust and latency remain healthy.
-
 ## 3. Analytical Thinking Framework
-This case follows the Analytical Thinking template supplied for the project:
+This case follows the supplied Analytical Thinking template:
 
-1. State assumptions and clarify scope.
+1. State assumptions and scope.
 2. Explain product rationale: product, users, value, alternatives and why now.
 3. Map ecosystem players to value propositions and must-take actions.
 4. Define ecosystem health metrics.
 5. Select and critique a North Star metric.
-6. Derive guardrails from the North Star's failure modes.
+6. Derive guardrails from North Star failure modes.
 7. Choose a 3–6 month team focus and work backward through the user journey.
 8. Prioritize a goal based on ability to influence and expected North Star impact.
 9. Frame the fundamental tradeoff and state what evidence would change the decision.
 
 ## 4. Ecosystem
 ### Shopper
-Value: quickly find products that satisfy an explicit or implicit need.
-Must-take actions: search, evaluate results, click product detail, add to cart, purchase.
-Health: successful-search rate, search-to-PDP CTR, reformulation, add-to-cart and conversion.
+Value: find products satisfying explicit or implicit needs with minimal search effort.
 
-### Seller / Brand
-Value: receive qualified discovery for relevant inventory.
-Must-take actions: provide complete product titles, categories, attributes, inventory and offers.
-Health: qualified impressions, PDP visits, conversion, returns and catalog-quality completeness.
+Must-take actions: submit a query, inspect results, click a product, add to cart, purchase.
+
+Health metrics: successful-search rate, reformulation rate, search-to-PDP CTR, add-to-cart and conversion.
+
+### Seller / brand
+Value: reach qualified high-intent shoppers.
+
+Must-take actions: maintain accurate titles, descriptions, structured attributes, inventory and offers.
+
+Health metrics: qualified impressions, PDP visits, conversion, returns and catalog completeness.
 
 ### Marketplace
-Value: match demand with supply while maintaining customer trust.
-Must-take actions: retrieve, rank, filter and serve results reliably.
-Health: search-assisted conversion/GMV, abandonment, latency, availability and result quality.
+Value: efficiently match shopper demand to available supply.
 
-### Search Team
-Value: improve discovery safely and measurably.
-Must-take actions: label queries, build baselines, experiment, monitor slices and regressions.
-Health: NDCG, Recall@K, exact-match regression, p95 latency and experiment velocity.
+Must-take actions: retrieve, filter and rank inventory while maintaining trust and speed.
 
-## 5. North Star and Guardrails
-### North Star
-**Weekly Successful Search Sessions** — weekly sessions in which a shopper searches and subsequently performs a high-intent action such as meaningful PDP engagement or add-to-cart.
+Health metrics: search-assisted GMV, conversion, abandonment, relevance, latency and availability.
 
-Why it works: it is closer to realized shopper value than raw query count and connects retrieval quality to behavior.
+### Search / merchandising team
+Value: continuously improve discovery quality.
 
-Failure modes: price, inventory, promotions and UX can influence downstream behavior; optimizing clicks can reward clickbait-like ranking; popular products may receive disproportionate exposure.
+Must-take actions: create relevance judgments, inspect failed queries, tune retrieval/ranking and run controlled experiments.
+
+Health metrics: NDCG, Recall@K, MRR, exact-query regression, p95 latency and online KPI movement.
+
+## 5. North Star Metric
+**Weekly Successful Search Sessions (WSSS)**: weekly sessions containing a search followed by a meaningful product-discovery action such as a qualified PDP click or add-to-cart.
+
+### Why it works
+It measures realized search value rather than raw search volume and connects relevance to shopper behavior.
+
+### Failure modes
+- Broad, low-quality result sets may increase clicks without increasing satisfaction.
+- Price, availability and promotions influence downstream actions independently of relevance.
+- Popular products may dominate exposure.
 
 ### Guardrails
 - Exact-match regression rate
 - p95 search latency
-- Query reformulation rate
-- Zero/low-relevance result rate
-- Return/cancellation proxy
-- Catalog/seller exposure concentration
-- Availability of surfaced products
+- Reformulation rate
+- Low-quality-result rate
+- Returns/cancellations
+- Exposure concentration
+- Zero-result / low-result rate
 
-## 6. Competitive Evidence
-### Target
-In a September 2025 case study, Target described a hybrid search system combining classic keyword matching with semantic vector search, structured filtering and additional ranking signals. Target reported a 20% improvement in product-discovery relevance, half as many no-result queries and a 60% reduction in vector-query response time.
+## 6. Team Focus: Next 3–6 Months
+Prioritize **long-tail, conversational, synonym-heavy and attribute-rich queries** because they are most exposed to lexical mismatch and are directly influenceable by retrieval improvements.
 
-Source: https://cloud.google.com/blog/topics/retail/from-query-to-cart-inside-targets-search-bar-overhaul-with-alloydb-ai
+Primary offline goal: improve **NDCG@10** on semantic-query slices while maintaining exact-query and latency guardrails.
 
-### Walmart
-Walmart has described GenAI Search that accepts natural-language shopping needs and uses the query, session and item engagement to understand intent and organize relevant product offerings.
+## 7. Proposed Architecture
 
-Source: https://tech.walmart.com/content/walmart-global-tech/en_us/blog/post/walmarts-generative-ai-search-puts-more-time-back-in-customers-hands.html
+```text
+Product catalog
+    |
+    +--> searchable product text --> BM25 index
+    |
+    +--> embedding model --> FAISS vector index
 
-### Amazon
-Amazon research has documented semantic product search as a way to address lexical shortcomings such as synonyms, morphology and spelling. Its 2019 work reported offline relevance gains and online A/B-test learnings. Later Amazon research described large-language-model bi-encoders for web-scale semantic product search, emphasizing the relevance/latency tradeoff.
-
-Sources:
-- https://www.amazon.science/publications/semantic-product-search
-- https://www.amazon.science/publications/web-scale-semantic-product-search-with-large-language-models
-
-These examples are public reference points only; this project does not assert knowledge of proprietary internal architectures beyond what the cited sources disclose.
-
-## 7. Proposed MVP Architecture
-```mermaid
-flowchart LR
-    A[Product Catalog] --> B[Normalize searchable text]
-    B --> C[SentenceTransformer embeddings]
-    C --> D[FAISS vector index]
-    B --> E[TF-IDF lexical index]
-    Q[Shopper query] --> F[Query embedding]
-    Q --> G[Lexical query vector]
-    F --> D
-    G --> E
-    D --> H[Semantic candidates]
-    E --> I[Lexical candidates]
-    H --> J[Reciprocal Rank Fusion]
-    I --> J
-    J --> K[Top-K products]
+Shopper query
+    |
+    +--> lexical tokenization --> BM25 top-N
+    |
+    +--> query embedding --> FAISS top-N
+                         |
+                         v
+                 Reciprocal Rank Fusion
+                         |
+                 structured filters
+          (category / price / availability)
+                         |
+              optional cross-encoder
+                    reranking top-N
+                         |
+                      Top-K
 ```
 
-### Components
-**Catalog representation.** Product title, category, description and structured attributes are concatenated into a searchable document representation.
+### Stage 1: BM25 lexical retrieval
+BM25 becomes the primary lexical baseline because exact tokens, brand names, SKUs and catalog terminology still matter. Compared with a simple TF-IDF baseline, BM25 provides term-frequency saturation and document-length normalization better suited to information retrieval.
 
-**Dense encoder.** `all-MiniLM-L6-v2` is used as a compact, easy-to-run MVP encoder. This is a prototyping choice, not a claim that it is optimal for commerce.
+### Stage 2: FAISS semantic retrieval
+Products and queries are encoded using a SentenceTransformer. Embeddings are normalized and stored in a FAISS inner-product index, which approximates cosine-similarity ranking when vectors are normalized.
 
-**FAISS.** Product embeddings are normalized and stored in a FAISS inner-product index. With normalized vectors, inner product behaves as cosine similarity.
+### Stage 3: Reciprocal Rank Fusion
+The architecture fuses rankings instead of directly combining incompatible BM25 and cosine-similarity score scales. For a product appearing at rank `r` in a ranked list, RRF adds:
 
-**Lexical baseline.** TF-IDF with unigrams and bigrams protects literal token matches and supplies an interpretable baseline.
+`1 / (k + r)`
 
-**Fusion.** RRF combines ranking position from the lexical and semantic systems without requiring the two systems' raw scores to have comparable scales.
+RRF is transparent, robust and easy to explain in an MVP.
+
+### Stage 4: Structured commerce filters
+Retrieval relevance cannot override hard constraints. Category, price, availability, geography or policy requirements should filter the candidate set before final ranking.
+
+### Stage 5: Cross-encoder reranking
+A cross-encoder jointly reads the query and candidate product text and can improve precision at top ranks. Because it is more computationally expensive, it should only score a small candidate set retrieved by BM25/FAISS.
 
 ## 8. Why FAISS
-FAISS is well suited to this case-study MVP because it is open source, efficient, local and transparent. It lets the project demonstrate vector indexing and nearest-neighbor retrieval without requiring a cloud account.
+FAISS is a strong MVP choice because it is open source, efficient, locally runnable and transparent. It lets the project demonstrate vector indexing, similarity retrieval and hybrid-search mechanics without relying on a proprietary managed service.
 
-FAISS is not a complete production commerce-search platform. A scaled implementation may need distributed serving, high availability, real-time catalog updates, structured filtering, access controls, observability, autoscaling and multi-region failover. The vector layer should therefore remain replaceable by a managed vector/search service when production requirements justify it.
+### Production limitations
+FAISS is a vector-search library, not a complete distributed commerce-search platform. Production systems may need:
+- horizontal scaling and replication;
+- real-time catalog updates;
+- rich metadata filtering;
+- high availability;
+- observability and rollback;
+- strict latency SLOs;
+- multi-region deployment;
+- abuse and policy enforcement.
 
-## 9. Evaluation Design
+The architecture therefore keeps the vector layer replaceable.
+
+## 9. Offline Experiment Design
 ### Hypothesis
-Hybrid lexical + semantic retrieval improves relevance for intent-rich shopping queries relative to lexical retrieval alone while maintaining exact-match quality and acceptable latency.
+**BM25 + FAISS hybrid retrieval will outperform lexical-only search on intent-rich queries while preserving exact-query performance.**
 
-### Offline systems
-- Control: TF-IDF lexical retrieval
-- Treatment A: FAISS semantic retrieval
-- Treatment B: hybrid RRF retrieval
+### Systems
+1. TF-IDF baseline
+2. BM25 baseline
+3. FAISS semantic retrieval
+4. TF-IDF + FAISS RRF
+5. BM25 + FAISS RRF
+6. BM25 + FAISS + cross-encoder reranker (next treatment)
 
-### Primary metric
-**NDCG@10**, because commerce relevance is graded and position-sensitive: highly relevant products near the top matter more than merely retrieving any relevant item.
-
-### Secondary metrics
-- Recall@10
-- Mean Reciprocal Rank
-- Query-level win rate vs. baseline
-- p50/p95 retrieval latency
-
-### Evaluation slices
-- Exact/identifier-like
-- Synonym
+### Query slices
+- Exact identifiers / model terms
 - Conversational
+- Synonym / semantic
 - Attribute-heavy
 - Long-tail
-- Typo/noisy query (future dataset extension)
+- Typo / noisy query (future expansion)
 
-A system should not be declared better based only on the aggregate metric. Slice analysis is necessary because semantic systems can improve long-tail recall while harming exact queries.
+### Metrics
+**Primary:** NDCG@10
 
-## 10. Online Experiment Plan
-After offline thresholds pass, run an A/B test.
+**Secondary:** Recall@10, MRR, p95 latency and low-result rate.
 
-**Control:** existing lexical search.
+### Why slice-level evaluation matters
+A blended average can hide regressions. Semantic systems may improve conversational queries while hurting exact identifiers. The PM decision should therefore compare both overall and segment-level results.
 
-**Treatment:** hybrid retrieval for eligible semantic-intent queries, with lexical dominance preserved for SKU/model/exact-brand patterns.
+## 10. Online Experiment Design
+After offline thresholds pass:
 
-**Primary online metric:** successful search sessions or search-assisted conversion.
+**Control:** current lexical ranking.
 
-**Secondary:** search-to-PDP CTR, add-to-cart rate and reformulation rate.
+**Treatment:** hybrid retrieval for eligible semantic-query traffic.
 
-**Guardrails:** p95 latency, exact-query regressions, returns/cancellations, out-of-stock exposure and seller concentration.
+**Primary online metric:** Weekly Successful Search Sessions or search-assisted conversion.
 
-### Decision rule
-Ship progressively only if the treatment improves shopper success with no material degradation in precision, latency or trust guardrails. If aggregate conversion rises but return/cancellation rates or exact-query regressions worsen, do not treat the experiment as a clean win.
+**Secondary:** search-to-PDP CTR, add-to-cart, reformulation and zero/low-result rate.
+
+**Guardrails:** p95 latency, exact-match regressions, returns/cancellations and exposure concentration.
+
+A staged rollout should begin with a small percentage of eligible traffic and expand only after relevance and latency remain healthy.
 
 ## 11. Fundamental Tradeoff
-### Option 1: Semantic-first retrieval
-Pros: high recall for conversational and synonym-heavy intent; simpler conceptual architecture.
+**Semantic recall vs. lexical precision.**
 
-Cons: may return semantically plausible but commercially wrong products; weaker exact-match guarantees; harder to debug.
+Vector retrieval expands recall based on meaning but can return products that are related without satisfying the shopper's exact need. Lexical retrieval protects precise identifiers and terminology but misses semantic intent.
 
-### Option 2: Hybrid retrieval
-Pros: balances lexical precision with semantic recall; supports gradual rollout and query routing; closer to public industry patterns.
+### Product decision
+Use hybrid retrieval rather than replacing lexical search. Preserve lexical dominance for exact SKU, brand-model and identifier-heavy queries. Apply semantic retrieval strongly to conversational, synonym-heavy and long-tail queries.
 
-Cons: additional system complexity; more tuning and observability; duplicate/fusion behavior must be managed.
+### What would change this decision
+A semantic-only system would need to demonstrate statistically meaningful online gains while maintaining exact-query precision, trust, availability constraints and latency.
 
-### Decision
-Choose **hybrid retrieval** for the MVP and initial production hypothesis. This best aligns with the mission because it improves discovery without unnecessarily sacrificing precision.
+## 12. Public Industry Reference Points
+### Target
+Target has publicly described combining keyword and vector search for product discovery and reported improvements in relevance, no-result queries and vector-query latency in its published platform case study.
 
-I would change this decision if a semantic-first system demonstrates statistically meaningful online gains across both semantic and exact-query slices while meeting latency and trust guardrails.
+### Walmart
+Walmart has publicly described GenAI Search that interprets broader natural-language shopping needs using query, session and engagement context.
 
-## 12. Product Roadmap
-### Phase 1 — Portfolio MVP
-Synthetic catalog, lexical baseline, FAISS semantic retrieval, RRF fusion, labeled qrels and offline metrics.
+### Amazon
+Amazon researchers have published semantic product-search work addressing synonyms, morphological variation, spelling errors, semantic retrieval and large-scale relevance/latency tradeoffs.
 
-### Phase 2 — Better relevance
-Commerce-specific embedding model, hard-negative mining, cross-encoder reranking and richer query labels.
+These examples establish the industry problem and design pattern; they do not imply access to proprietary implementations.
 
-### Phase 3 — Commerce constraints
-Price/category/brand/availability filters, query-intent classification and business-rule integration.
+See `docs/competitive-analysis.md` for public source links.
 
-### Phase 4 — Learning loop
-Use anonymized click/add-to-cart/purchase labels, debias position effects, retrain representations, build experimentation and monitoring dashboards.
+## 13. SEO Relationship
+This project's primary scope is **on-site product search**, not external Google SEO. The two systems interact through shared catalog quality:
 
-### Phase 5 — Multimodal/agentic discovery
-Image-text embeddings, natural-language constraint extraction and task-oriented shopping experiences where justified by user need.
+- richer structured product attributes improve internal retrieval;
+- clearer product titles/descriptions can improve external discoverability;
+- query logs can identify content gaps and long-tail demand;
+- category taxonomy benefits both site navigation and crawlable information architecture.
 
-## 13. Risks and Responsible Use
-- Behavioral labels can amplify popularity and position bias.
-- Semantic matching can overgeneralize intent.
-- Personalized search can create unfair exposure concentration.
-- Product attributes may be incomplete or misleading.
-- Generative layers must not fabricate product facts, price or availability.
-- Privacy-sensitive behavioral data should be minimized, governed and appropriately aggregated.
+Future work can add an SEO opportunity module without conflating internal relevance with external ranking algorithms.
 
-## 14. SEO vs. On-site Search
-This project primarily optimizes **on-site product search**, not external search-engine SEO. The two can share catalog-enrichment assets—clean titles, attributes, taxonomy and structured product information—but have different objectives and ranking systems. A future extension can use query-gap insights to improve category landing pages and product metadata for organic acquisition without claiming that the FAISS index itself affects Google rankings.
+## 14. MVP Roadmap
+### Phase 1 — completed in this prototype
+- Synthetic catalog
+- SentenceTransformer embeddings
+- FAISS retrieval
+- TF-IDF baseline
+- BM25 baseline
+- Reciprocal Rank Fusion
+- Query relevance judgments
+- NDCG@10 / Recall@10
+- Streamlit demo
+- Unit-test CI
+
+### Phase 2
+- Larger public commerce dataset
+- Price, brand and availability metadata
+- Expanded human relevance labels
+- Cross-encoder evaluation
+- MRR and latency benchmark reporting
+- Query parser for structured constraints
+
+### Phase 3
+- Commerce-specific embedding model
+- Learning-to-rank / behavioral signals
+- Personalization with privacy guardrails
+- Online experimentation framework
+- Catalog freshness pipeline
+- SEO opportunity analysis
+
+## 15. Risks
+### Model relevance risk
+Semantic models can infer incorrect associations.
+
+Mitigation: hybrid retrieval, slice-based evaluation, human labels and conservative rollout.
+
+### Latency risk
+Embedding, ANN retrieval and reranking add cost.
+
+Mitigation: precompute catalog vectors, limit top-N, cache frequent queries and rerank only a small candidate set.
+
+### Data-bias risk
+Clicks and purchases overrepresent popular products.
+
+Mitigation: use human relevance judgments and exposure-aware analysis before learning from behavioral data.
+
+### Catalog-quality risk
+Poor attributes reduce both lexical and semantic quality.
+
+Mitigation: catalog completeness metrics and enrichment workflows.
 
 ## Conclusion
-The case study demonstrates a product-management approach to applied AI: start with a user problem, define ecosystem value and measurable goals, establish a baseline, introduce the smallest useful AI component, evaluate by slices, protect guardrails and make the architecture replaceable. FAISS is the right vector-search choice for this MVP because it makes semantic retrieval tangible and reproducible while keeping the product discussion focused on relevance, experimentation and customer outcomes.
+The central PM lesson is not "use vector search." It is to identify where lexical search fails, define a measurable user-value hypothesis, build the smallest hybrid system capable of testing that hypothesis, and evaluate both relevance gains and business guardrails.
+
+FAISS is appropriate for the MVP because it exposes the retrieval mechanics clearly. BM25 protects lexical precision, RRF combines independent rankings, structured filters enforce hard commerce constraints and optional reranking creates a path toward higher top-rank precision. The architecture can evolve without changing the core product reasoning.
