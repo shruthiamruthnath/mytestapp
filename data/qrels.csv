@@ -1,0 +1,17 @@
+query,slice,product_id,relevance
+comfortable shoes for walking all day,conversational,P001,3
+comfortable shoes for walking all day,conversational,P004,2
+shoes for wet hiking trails,semantic,P002,3
+shoes for wet hiking trails,semantic,P004,1
+professional bag for laptop and rainy commute,attribute-heavy,P016,3
+professional bag for laptop and rainy commute,attribute-heavy,P015,1
+warm coat for a small child in winter,synonym,P006,3
+headphones that block noise on a commute,semantic,P011,3
+earbuds for running at the gym,semantic,P012,3
+portable battery for my phone while traveling,conversational,P014,3
+small bottle my child won't spill at school,conversational,P010,3
+chair for working eight hours with back support,attribute-heavy,P007,3
+something to make my desk chair more comfortable,conversational,P008,3
+65 watt usb c charger,exact,P013,3
+waterproof jacket I can pack in a suitcase,attribute-heavy,P005,3
+backpack for an airplane with laptop space,semantic,P015,3

@@ -1,0 +1,22 @@
+query,slice,product_id,relevance
+waterproof women's hiking shoes under $100 with good ratings,constraint-rich,P017,3
+waterproof women's hiking shoes under $100 with good ratings,constraint-rich,P002,2
+waterproof women's hiking shoes under $100 with good ratings,constraint-rich,P021,1
+women's hiking boots under $100 rated 4.5 stars or better,constraint-rich,P017,3
+women's hiking boots under $100 rated 4.5 stars or better,constraint-rich,P002,1
+comfortable women's shoes for walking all day under $90,conversational-filtered,P001,3
+comfortable women's shoes for walking all day under $90,conversational-filtered,P020,2
+comfortable women's shoes for walking all day under $90,conversational-filtered,P004,1
+waterproof women's jacket under $90 for travel,attribute-filtered,P023,3
+waterproof women's jacket under $90 for travel,attribute-filtered,P005,2
+65 watt usb c charger under $50 rated 4.5 stars,exact-filtered,P013,3
+compact travel charger under $40 with high ratings,conversational-filtered,P022,3
+compact travel charger under $40 with high ratings,conversational-filtered,P014,1
+carry on backpack with laptop space under $100,semantic-filtered,P024,3
+carry on backpack with laptop space under $100,semantic-filtered,P015,2
+carry on backpack with laptop space under $100,semantic-filtered,P016,1
+kids leakproof bottle under $25 rated 4.5 stars,constraint-rich,P010,3
+noise cancelling headphones under $150 for commuting,semantic-filtered,P011,3
+women's waterproof trail shoes in stock under $90,constraint-rich,P017,2
+women's waterproof trail shoes in stock under $90,constraint-rich,P002,2
+women's waterproof trail shoes in stock under $90,constraint-rich,P021,0
