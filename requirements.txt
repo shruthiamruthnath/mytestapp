@@ -2,4 +2,7 @@ faiss-cpu
 sentence-transformers
 numpy
 scikit-learn
+rank-bm25
+pandas
+streamlit
 pytest
