@@ -7,9 +7,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 try:  # package import (pytest / python -m)
+    from .bm25 import BM25ProductSearch
     from .hybrid import HybridProductSearch, LexicalProductSearch
     from .search import Product, SemanticProductSearch
 except ImportError:  # direct script execution
+    from bm25 import BM25ProductSearch
     from hybrid import HybridProductSearch, LexicalProductSearch
     from search import Product, SemanticProductSearch
 
@@ -52,18 +54,34 @@ def build_queries(rows: List[dict]) -> Dict[Tuple[str, str], Dict[str, int]]:
     return grouped
 
 
+def rrf_ids(rankings: List[List[str]], k: int = 10, rrf_k: int = 60) -> List[str]:
+    scores: Dict[str, float] = {}
+    for ranking in rankings:
+        for rank, pid in enumerate(ranking, start=1):
+            scores[pid] = scores.get(pid, 0.0) + 1.0 / (rrf_k + rank)
+    return [pid for pid, _ in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:k]]
+
+
 def main() -> None:
     products = load_products(ROOT / "data" / "sample_products.csv")
     qrels = build_queries(load_qrels(ROOT / "data" / "qrels.csv"))
 
-    lexical = LexicalProductSearch(products)
+    tfidf = LexicalProductSearch(products)
+    bm25 = BM25ProductSearch(products)
     semantic = SemanticProductSearch(products)
-    hybrid = HybridProductSearch(products)
+    tfidf_hybrid = HybridProductSearch(products)
+
+    def bm25_semantic_rrf(query: str) -> List[str]:
+        lexical_ids = [r["product"].id for r in bm25.search(query, 25)]
+        semantic_ids = [r["product"].id for r in semantic.search(query, 25)]
+        return rrf_ids([lexical_ids, semantic_ids], k=10)
 
     systems = {
-        "lexical": lambda q: [r.product.id for r in lexical.search(q, 10)],
-        "semantic": lambda q: [r["product"].id for r in semantic.search(q, 10)],
-        "hybrid": lambda q: [r.product.id for r in hybrid.search(q, 10)],
+        "tfidf": lambda q: [r.product.id for r in tfidf.search(q, 10)],
+        "bm25": lambda q: [r["product"].id for r in bm25.search(q, 10)],
+        "faiss_semantic": lambda q: [r["product"].id for r in semantic.search(q, 10)],
+        "tfidf_faiss_rrf": lambda q: [r.product.id for r in tfidf_hybrid.search(q, 10)],
+        "bm25_faiss_rrf": bm25_semantic_rrf,
     }
 
     print("system,slice,queries,ndcg@10,recall@10")
@@ -76,7 +94,11 @@ def main() -> None:
             )
         for slice_name, vals in sorted(by_slice.items()):
             n = len(vals)
-            print(f"{name},{slice_name},{n},{sum(v[0] for v in vals)/n:.4f},{sum(v[1] for v in vals)/n:.4f}")
+            print(
+                f"{name},{slice_name},{n},"
+                f"{sum(v[0] for v in vals)/n:.4f},"
+                f"{sum(v[1] for v in vals)/n:.4f}"
+            )
 
 
 if __name__ == "__main__":
