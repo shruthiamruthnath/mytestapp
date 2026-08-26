@@ -82,6 +82,7 @@ See [`docs/competitive-analysis.md`](docs/competitive-analysis.md).
 │   ├── competitive-analysis.md
 │   └── white-paper.md
 ├── src/
+│   ├── __init__.py               # Python package marker for CI/imports
 │   ├── search.py                 # SentenceTransformer + FAISS
 │   ├── bm25.py                   # BM25 lexical retrieval
 │   ├── hybrid.py                 # original TF-IDF + FAISS RRF baseline
@@ -101,7 +102,7 @@ python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python src/evaluate.py
-pytest
+PYTHONPATH=. python -m pytest -q
 streamlit run app.py
 ```
 
